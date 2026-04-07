@@ -1,0 +1,276 @@
+---
+id: b6f2413c-c098-4302-963a-dbfcbabb2641
+---
+classDiagram
+direction LR
+
+// [MermaidChart: b6f2413c-c098-4302-963a-dbfcbabb2641]
+class MainApp {
+  +configure_logging()
+  +load_environment()
+  +perform_startup(app)
+  +perform_shutdown()
+  +create_app()
+}
+
+class GlobalConfigManager {
+  +from_env(include_llm)
+}
+
+class LLMConfig {
+  +__init__(api_key, model, embedding_model,...)
+  +_validate()
+  +from_env()
+  +embedding_dimensions()
+  +configure_dspy(set_global)
+}
+
+class QdrantDatabaseManager {
+  +connect(...)
+  +connect_from_config(config)
+  +get_client()
+  +setup_all_collections(...)
+  +check_collections_exist(...)
+  +get_collection_info(name)
+  +get_stats()
+  +disconnect()
+}
+
+class SystemRoutes {
+  +root()
+  +health()
+  +status(request_id)
+}
+
+class ChatRoutes {
+  +chat(request)
+}
+
+class AgentRoutes {
+  +trigger_lifecycle(request)
+  +get_lifecycle_status(request_id)
+  +get_latest_lifecycle_status()
+}
+
+class IngestRoutes {
+  +run_ingestion(...)
+}
+
+class DatasourceRoutes {
+  +register_datasource(request)
+  +list_datasources()
+  +index_datasource(datasource_id, request)
+}
+
+class AgentRegistryRoutes {
+  +register_agent(request)
+  +list_agents()
+}
+
+class DbRoutes {
+  +db_health()
+  +database_stats()
+  +list_collections()
+  +get_collection_info(collection_name)
+}
+
+class McpRoutes {
+  +mcp_info(request)
+  +mcp_messages(request)
+}
+
+class ScriptRoutes {
+  +upload_script(file, agent_id)
+}
+
+class AgentRuntimeService {
+  +trigger_lifecycle(...)
+  +get_status(request_id)
+  +get_latest_status()
+  +run_query(...)
+  +_run_lifecycle(...)
+  +_on_stage_update(payload)
+  +_get_orchestrator()
+}
+
+class LifecycleStatusService {
+  +initialize_request(...)
+  +mark_stage(...)
+  +mark_agent_completed(...)
+  +finalize_request(...)
+  +get_request_status(request_id)
+  +get_latest_status()
+}
+
+class AgentOrchestratorService {
+  +register_agent(source_type, agent,...)
+  +register_agents(agent_map)
+  +orchestrate(...)
+}
+
+class RoutingService {
+  +route_sources(user_query, selected_sources, agents)
+}
+
+class PlanCollectionService {
+  +collect_plan_bundle(...)
+}
+
+class ArbitrationService {
+  +arbitrate(user_query, candidate_sources, plan_bundle, config)
+}
+
+class ExecutionDelegationService {
+  +execute_selected(...)
+}
+
+class MergeService {
+  +merge(user_query, agent_results)
+}
+
+class ValidationLoopService {
+  +validate_and_retry(...)
+}
+
+class ExecutionService {
+  +run(execution_plan)
+  +get_available_tool_names()
+  +_build_react_agent()
+  +_run_react(execution_plan)
+  +_run_tool(tool_name, args, index)
+}
+
+class ToolAdapterService {
+  +query_db(sql)
+  +call_mcp_tool(tool_name, args)
+  +run_script(script_name, params)
+  +search_documents(query, top_k, score_threshold)
+  +get_mcp_tool_functions()
+}
+
+class BackendRegistryService {
+  +register_datasource(payload)
+  +get_datasource(datasource_id)
+  +list_datasources()
+  +register_agent(payload)
+  +list_agents()
+}
+
+class DataSourceManager {
+  +register_datasource(payload)
+  +get_datasource(datasource_id)
+  +list_datasources()
+  +register_agent(payload)
+  +list_agents()
+  +get_datasource_with_state(datasource_id)
+  +update_datasource_state(datasource_id, state)
+}
+
+class TasksDB {
+  +startup_initialize_database(recreate)
+  +health_check_database()
+  +startup_ingest_structured_sources(...)
+  +startup_ingest_all_sources(...)
+}
+
+class TasksDocuments {
+  +startup_ingest_all_documents(...)
+  +async_ingest_single_document(...)
+  +async_ingest_from_text(...)
+  +async_ingest_document_batch(...)
+}
+
+class TasksMCP {
+  +get_mcp_server()
+  +get_named_mcp_server(name, include_sql_tool)
+  +list_mcp_tools(mcp_server)
+  +startup_initialize_mcp()
+  +handle_mcp_request(mcp, request)
+}
+
+class SchemaIngestionService {
+  +ingest(recreate, dry_run)
+}
+
+class DocService {
+  +process_documents(recreate, dry_run)
+}
+
+class SqlSourceAgent {
+  +analyze(user_query, vector_context)
+  +plan(user_query, context)
+  +execute(execution_plan)
+  +validate(result, user_query)
+}
+
+class StructuredDataSourceAgent {
+  +analyze(...)
+  +plan(...)
+  +execute(...)
+  +validate(...)
+}
+
+class DocumentSourceAgent {
+  +analyze(...)
+  +plan(...)
+  +execute(...)
+  +validate(...)
+}
+
+%% App composition
+MainApp --> GlobalConfigManager : loads config
+MainApp --> TasksDB : startup db + ingestion
+MainApp --> TasksMCP : startup MCP
+MainApp --> QdrantDatabaseManager : shutdown disconnect
+
+%% Route dependencies
+ChatRoutes --> AgentRuntimeService : run_query
+AgentRoutes --> AgentRuntimeService : trigger/status
+IngestRoutes --> TasksDB : pipeline ingest
+IngestRoutes --> TasksDocuments : docs/text/file ingest
+DatasourceRoutes --> BackendRegistryService : register/list/index
+DatasourceRoutes --> TasksDB : index structured
+DatasourceRoutes --> TasksDocuments : index documents
+AgentRegistryRoutes --> BackendRegistryService : register/list
+DbRoutes --> QdrantDatabaseManager : db introspection
+McpRoutes --> TasksMCP : MCP requests
+SystemRoutes --> TasksDB : health/status
+
+%% Runtime + orchestrator
+AgentRuntimeService --> LifecycleStatusService : lifecycle snapshots
+AgentRuntimeService --> AgentOrchestratorService : orchestrate
+AgentRuntimeService --> TasksMCP : named MCP servers
+AgentRuntimeService --> GlobalConfigManager : include_llm true
+
+AgentOrchestratorService --> RoutingService
+AgentOrchestratorService --> PlanCollectionService
+AgentOrchestratorService --> ArbitrationService
+AgentOrchestratorService --> ExecutionDelegationService
+AgentOrchestratorService --> MergeService
+AgentOrchestratorService --> ValidationLoopService
+
+ExecutionDelegationService --> SqlSourceAgent
+ExecutionDelegationService --> StructuredDataSourceAgent
+ExecutionDelegationService --> DocumentSourceAgent
+
+%% Agent internals
+SqlSourceAgent --> ExecutionService
+StructuredDataSourceAgent --> ExecutionService
+DocumentSourceAgent --> ExecutionService
+ExecutionService --> ToolAdapterService
+ToolAdapterService --> TasksMCP : MCP tool bridge
+ToolAdapterService --> QdrantDatabaseManager : vector search
+
+%% Data/ingestion
+TasksDB --> SchemaIngestionService
+TasksDocuments --> DocService
+SchemaIngestionService --> LLMConfig : embedding config
+DocService --> LLMConfig : embedding model
+
+%% Registry/state
+BackendRegistryService --> DataSourceManager
+LifecycleStatusService --> DataSourceManager : state backend integration
+
+%% Config
+GlobalConfigManager --> LLMConfig
+GlobalConfigManager --> QdrantDatabaseManager

@@ -232,4 +232,12 @@ export const healthAPI = {
   },
 };
 
+// GitBook config check
+export const gitbookConfigAPI = {
+  check: async () => {
+    const response = await api.get('/config/gitbook');
+    return response.data;
+  },
+};
+
 export default api;

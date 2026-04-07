@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Database, Plus, RefreshCw, Upload, CheckCircle, AlertCircle, Trash2, X, Info } from 'lucide-react'
-import { datasourcesAPI, ingestionAPI } from '../services/api'
+import { Database, Plus, RefreshCw, Upload, CheckCircle, AlertCircle, Trash2, X, Info, BookOpen } from 'lucide-react'
+import { datasourcesAPI, ingestionAPI, gitbookConfigAPI } from '../services/api'
 import './Datasources.css'
 
 function Datasources() {
@@ -13,6 +13,9 @@ function Datasources() {
     connection: ''
   })
   const [documentFiles, setDocumentFiles] = useState([])
+  const [gitbookEnvConfig, setGitbookEnvConfig] = useState(null) // { api_key_configured, uri }
+  const [gitbookApiKey, setGitbookApiKey] = useState('')
+  const [gitbookUri, setGitbookUri] = useState('')
   const [indexingSource, setIndexingSource] = useState(null)
   const [deletingSource, setDeletingSource] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
@@ -35,6 +38,19 @@ function Datasources() {
     }
   }
 
+  const handleTypeChange = async (newType) => {
+    setFormData({ ...formData, source_type: newType, connection: '' })
+    if (newType === 'gitbook' && !gitbookEnvConfig) {
+      try {
+        const config = await gitbookConfigAPI.check()
+        setGitbookEnvConfig(config)
+        setGitbookUri(config.uri || '')
+      } catch {
+        setGitbookEnvConfig({ api_key_configured: false, uri: null })
+      }
+    }
+  }
+
   const handleRegister = async (e) => {
     e.preventDefault()
     try {
@@ -42,14 +58,27 @@ function Datasources() {
       setShowRegisterForm(false)
       showNotification('Registering datasource...', 'info')
 
-      // Register datasource FIRST (so it exists in backend)
-      const payload = {
-        name: formData.name,
-        source_type: formData.source_type,
-        ...(formData.source_type === 'documents'
-          ? (formData.connection ? { file_path: formData.connection } : {})
-          : { db_url: formData.connection })
+      let payload
+      if (formData.source_type === 'gitbook') {
+        payload = {
+          name: formData.name,
+          source_type: 'gitbook',
+          metadata: {
+            ...(gitbookUri.trim() ? { uri: gitbookUri.trim() } : {}),
+            ...(gitbookApiKey.trim() ? { api_key: gitbookApiKey.trim() } : {}),
+          },
+        }
+      } else {
+        payload = {
+          name: formData.name,
+          source_type: formData.source_type,
+          ...(formData.source_type === 'documents'
+            ? (formData.connection ? { file_path: formData.connection } : {})
+            : { db_url: formData.connection }),
+        }
       }
+
+      // Register datasource FIRST (so it exists in backend)
       const registrationResult = await datasourcesAPI.register(payload)
       const datasourceId = registrationResult.datasource?.id
       
@@ -68,6 +97,8 @@ function Datasources() {
       showNotification('Datasource registered successfully', 'success')
       setFormData({ name: '', source_type: 'postgres', connection: '' })
       setDocumentFiles([])
+      setGitbookApiKey('')
+      setGitbookUri(gitbookEnvConfig?.uri || '')
       loadDatasources()
     } catch (error) {
       console.error('Error registering datasource:', error)
@@ -203,48 +234,107 @@ function Datasources() {
                 <select
                   id="type"
                   value={formData.source_type}
-                  onChange={(e) => setFormData({ ...formData, source_type: e.target.value })}
+                  onChange={(e) => handleTypeChange(e.target.value)}
                 >
                   <option value="postgres">Postgres</option>
                   <option value="mysql">MySQL</option>
                   <option value="redis">Redis</option>
                   <option value="elasticsearch">Elasticsearch</option>
                   <option value="documents">Documents</option>
+                  <option value="gitbook">GitBook</option>
                 </select>
               </div>
-              <div className="form-group">
-                <label htmlFor="connection">Connection</label>
-                {formData.source_type === 'documents' ? (
-                  <>
+
+              {formData.source_type === 'gitbook' ? (
+                <>
+                  {gitbookEnvConfig?.api_key_configured ? (
+                    <div className="form-group">
+                      <label>
+                        <BookOpen size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                        API Key
+                      </label>
+                      <p className="form-hint" style={{ color: '#22c55e', margin: '4px 0' }}>
+                        ✓ Using GITBOOK_API_KEY from server environment
+                      </p>
+                      <input
+                        type="password"
+                        value={gitbookApiKey}
+                        onChange={(e) => setGitbookApiKey(e.target.value)}
+                        placeholder="Override env API key (optional)"
+                      />
+                    </div>
+                  ) : (
+                    <div className="form-group">
+                      <label>
+                        <BookOpen size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+                        API Key <span style={{ color: '#ef4444' }}>*</span>
+                      </label>
+                      <p className="form-hint" style={{ color: '#f97316', margin: '4px 0' }}>
+                        ⚠ GITBOOK_API_KEY not set in server env
+                      </p>
+                      <input
+                        type="password"
+                        value={gitbookApiKey}
+                        onChange={(e) => setGitbookApiKey(e.target.value)}
+                        placeholder="gb_api_xxxxxxxx"
+                        required
+                      />
+                    </div>
+                  )}
+                  <div className="form-group">
+                    <label>
+                      Space URL
+                      {gitbookEnvConfig?.uri && (
+                        <span style={{ fontWeight: 400, color: '#94a3b8', marginLeft: 6 }}>(from env)</span>
+                      )}
+                      <span style={{ fontWeight: 400, color: '#94a3b8', marginLeft: 6 }}>(optional)</span>
+                    </label>
                     <input
-                      id="document-upload"
-                      type="file"
-                      multiple
-                      accept=".pdf,.docx,.pptx,.txt,.md"
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || [])
-                        setDocumentFiles(files)
-                      }}
+                      type="url"
+                      value={gitbookUri}
+                      onChange={(e) => setGitbookUri(e.target.value)}
+                      placeholder="https://yourorg.gitbook.io/space/"
                     />
+                    <small style={{ color: '#94a3b8' }}>
+                      Include a space path to ingest one space — leave empty to ingest all spaces in the org.
+                    </small>
+                  </div>
+                </>
+              ) : (
+                <div className="form-group">
+                  <label htmlFor="connection">Connection</label>
+                  {formData.source_type === 'documents' ? (
+                    <>
+                      <input
+                        id="document-upload"
+                        type="file"
+                        multiple
+                        accept=".pdf,.docx,.pptx,.txt,.md"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || [])
+                          setDocumentFiles(files)
+                        }}
+                      />
+                      <textarea
+                        id="connection"
+                        value={formData.connection}
+                        onChange={(e) => setFormData({ ...formData, connection: e.target.value })}
+                        placeholder="Optional: /absolute/path/to/docs"
+                        rows="2"
+                      />
+                    </>
+                  ) : (
                     <textarea
                       id="connection"
                       value={formData.connection}
                       onChange={(e) => setFormData({ ...formData, connection: e.target.value })}
-                      placeholder="Optional: /absolute/path/to/docs"
-                      rows="2"
+                      placeholder="postgresql://user:password@localhost:5432/dbname"
+                      rows="3"
+                      required
                     />
-                  </>
-                ) : (
-                  <textarea
-                    id="connection"
-                    value={formData.connection}
-                    onChange={(e) => setFormData({ ...formData, connection: e.target.value })}
-                    placeholder="postgresql://user:password@localhost:5432/dbname"
-                    rows="3"
-                    required
-                  />
-                )}
-              </div>
+                  )}
+                </div>
+              )}
               <div className="form-actions">
                 <button type="button" onClick={() => setShowRegisterForm(false)} className="btn btn-secondary">
                   Cancel

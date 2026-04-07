@@ -264,6 +264,14 @@
   transform: none;
 }
 
+.stop-button {
+  background: #ef4444;
+}
+
+.stop-button:hover {
+  background: #dc2626 !important;
+}
+
 @media (max-width: 768px) {
   .chat-header {
     padding: 1rem;

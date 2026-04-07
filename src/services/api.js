@@ -40,6 +40,7 @@ export const chatAPI = {
     {
       systemPrompt = null,
       selectedSources = null,
+      signal = null,
       onStarted,
       onDispatched,
       onAgent,
@@ -59,6 +60,7 @@ export const chatAPI = {
         selected_sources: selectedSources,
         vector_search_context: systemPrompt || '',
       }),
+      ...(signal ? { signal } : {}),
     })
 
     if (!response.ok || !response.body) {
@@ -158,11 +160,11 @@ export const agentsAPI = {
     return response.data;
   },
   
-  query: async (sourceType, query) => {
-    const normalizedSource = (sourceType || '').toLowerCase();
+  query: async (agentId, query) => {
+    // agentId is the agent's UUID — passed as selected_sources for direct pinned routing
     const response = await api.post('/chat', {
       message: query,
-      selected_sources: normalizedSource ? [normalizedSource] : null,
+      selected_sources: agentId ? [agentId] : null,
       vector_search_context: ''
     });
     return response.data;

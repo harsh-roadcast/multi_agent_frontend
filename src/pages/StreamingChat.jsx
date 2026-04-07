@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Loader } from 'lucide-react'
+import { Send, Bot, User, Loader, Square } from 'lucide-react'
 import { chatAPI } from '../services/api'
 import { formatResponseAsMarkdown, renderMarkdown } from '../utils/markdownFormatter.jsx'
 import AgentPoolSelector from '../components/AgentPoolSelector'
@@ -20,6 +20,8 @@ function StreamingChat() {
   const [currentStatus, setCurrentStatus] = useState('')
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const elapsedRef = useRef(null)
+  const abortRef = useRef(null)
+  const timeoutRef = useRef(null)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -71,9 +73,16 @@ function StreamingChat() {
     setCurrentStatus('Starting stream...')
     elapsedRef.current = setInterval(() => setElapsedSeconds((s) => s + 1), 1000)
 
+    const controller = new AbortController()
+    abortRef.current = controller
+    timeoutRef.current = setTimeout(() => {
+      controller.abort()
+    }, 120_000)
+
     try {
       await chatAPI.streamMessage(userText, {
         selectedSources,
+        signal: controller.signal,
         onStarted: () => {
           setCurrentStatus('Selecting agents...')
         },
@@ -107,6 +116,7 @@ function StreamingChat() {
           setCurrentStatus('Completed')
         },
         onError: (event) => {
+          clearTimeout(timeoutRef.current)
           const errorText = event?.error || event?.message || 'No agents returned a result for this query.'
           setMessages((prev) =>
             prev.map((msg) =>
@@ -120,12 +130,31 @@ function StreamingChat() {
           setIsLoading(false)
         },
         onDone: () => {
+          clearTimeout(timeoutRef.current)
           clearInterval(elapsedRef.current)
           setIsLoading(false)
           setTimeout(() => setCurrentStatus(''), 1200)
         },
       })
     } catch (error) {
+      clearTimeout(timeoutRef.current)
+      // Ignore abort errors — user intentionally stopped, or 120s timeout fired
+      if (error?.name === 'AbortError') {
+        clearInterval(elapsedRef.current)
+        setIsLoading(false)
+        const timedOut = elapsedSeconds >= 120
+        if (timedOut) {
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === botMessageId
+                ? { ...msg, content: '⚠️ Request timed out after 120 seconds.', isError: true, isMarkdown: false }
+                : msg
+            )
+          )
+        }
+        setCurrentStatus('')
+        return
+      }
       const errorText = error?.message || 'Streaming request failed'
       setMessages((prev) =>
         prev.map((msg) =>
@@ -229,6 +258,17 @@ function StreamingChat() {
           >
             <Send size={20} />
           </button>
+          {isLoading && (
+            <button
+              onClick={() => {
+                abortRef.current?.abort()
+              }}
+              className="send-button stop-button"
+              title="Stop"
+            >
+              <Square size={18} />
+            </button>
+          )}
         </div>
       </div>
     </div>

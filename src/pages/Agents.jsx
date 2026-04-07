@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Users, Plus, RefreshCw, MessageSquare, CheckCircle, AlertCircle, Trash2 } from 'lucide-react'
-import { agentsAPI } from '../services/api'
+import { Users, Plus, RefreshCw, MessageSquare, CheckCircle, AlertCircle, Trash2, Key, Tag } from 'lucide-react'
+import { agentsAPI, datasourcesAPI } from '../services/api'
 import './Agents.css'
 
 function Agents() {
@@ -15,15 +15,21 @@ function Agents() {
   const [formData, setFormData] = useState({
     name: '',
     source_type: 'postgres',
-    capabilities: '',
-    datasources: ''
+    description: '',
+    datasource_id: '',
+    keywords: ''
   })
   const [notification, setNotification] = useState(null)
+  const [datasources, setDatasources] = useState([])  // for datasource_id dropdown
   const [deletingId, setDeletingId] = useState(null)   // id being deleted
   const [confirmDeleteId, setConfirmDeleteId] = useState(null) // id awaiting confirm
 
   useEffect(() => {
     loadAgents()
+    // Load datasources for the registration form dropdown
+    datasourcesAPI.list()
+      .then((data) => setDatasources(data.items || []))
+      .catch(() => {})
   }, [])
 
   const loadAgents = async () => {
@@ -42,19 +48,22 @@ function Agents() {
   const handleRegister = async (e) => {
     e.preventDefault()
     try {
+      const keywords = formData.keywords
+        .split(',')
+        .map((k) => k.trim())
+        .filter(Boolean)
       const payload = {
         name: formData.name,
         source_type: formData.source_type,
-        description: `Capabilities: ${formData.capabilities || 'n/a'}`,
-        config: {
-          capabilities: formData.capabilities.split(',').map(c => c.trim()).filter(Boolean),
-          datasources: formData.datasources.split(',').map(d => d.trim()).filter(Boolean)
-        }
+        description: formData.description || `${formData.source_type} agent`,
+        datasource_id: formData.datasource_id || undefined,
+        keywords,
+        config: {},
       }
       await agentsAPI.register(payload)
       showNotification('Agent registered successfully', 'success')
       setShowRegisterForm(false)
-      setFormData({ name: '', source_type: 'postgres', capabilities: '', datasources: '' })
+      setFormData({ name: '', source_type: 'postgres', description: '', datasource_id: '', keywords: '' })
       loadAgents()
     } catch (error) {
       console.error('Error registering agent:', error)
@@ -67,7 +76,8 @@ function Agents() {
     
     try {
       setQuerying(true)
-      const result = await agentsAPI.query(selectedAgent.source_type, queryText)
+      // Use agent UUID for direct pinned routing
+      const result = await agentsAPI.query(selectedAgent.id, queryText)
       setQueryResult(result)
     } catch (error) {
       console.error('Error querying agent:', error)
@@ -173,28 +183,54 @@ function Agents() {
                   <option value="mysql">MySQL</option>
                   <option value="redis">Redis</option>
                   <option value="elasticsearch">Elasticsearch</option>
-                  <option value="documents">Documents</option>
+                  <option value="document">Documents</option>
+                  <option value="gitbook">GitBook</option>
                 </select>
               </div>
               <div className="form-group">
-                <label htmlFor="capabilities">Capabilities (comma-separated)</label>
+                <label htmlFor="description">Description</label>
                 <input
-                  id="capabilities"
+                  id="description"
                   type="text"
-                  value={formData.capabilities}
-                  onChange={(e) => setFormData({ ...formData, capabilities: e.target.value })}
-                  placeholder="sql_query, data_analysis, visualization"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Searches fleet management data in PostgreSQL"
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="datasources">Connected Datasources (comma-separated)</label>
+                <label htmlFor="datasource_id">Link to Datasource (optional)</label>
+                <select
+                  id="datasource_id"
+                  value={formData.datasource_id}
+                  onChange={(e) => setFormData({ ...formData, datasource_id: e.target.value })}
+                >
+                  <option value="">— None (broad access) —</option>
+                  {(() => {
+                    const typeMatch = datasources.filter((ds) =>
+                      ds.source_type === formData.source_type ||
+                      (formData.source_type === 'gitbook' && ds.source_type === 'gitbook') ||
+                      (formData.source_type === 'document' && ds.source_type === 'documents')
+                    )
+                    const list = typeMatch.length > 0 ? typeMatch : datasources
+                    return list.map((ds) => (
+                      <option key={ds.id} value={ds.id}>
+                        {ds.name} ({ds.source_type})
+                      </option>
+                    ))
+                  })()}
+                </select>
+                <small style={{ color: '#94a3b8' }}>Linking locks this agent to that datasource only.</small>
+              </div>
+              <div className="form-group">
+                <label htmlFor="keywords">Keywords (comma-separated, optional)</label>
                 <input
-                  id="datasources"
+                  id="keywords"
                   type="text"
-                  value={formData.datasources}
-                  onChange={(e) => setFormData({ ...formData, datasources: e.target.value })}
-                  placeholder="postgres_db, mongodb_cluster"
+                  value={formData.keywords}
+                  onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
+                  placeholder="fleet, driver, trip, vehicle"
                 />
+                <small style={{ color: '#94a3b8' }}>Any matching keyword skips LLM routing and calls this agent directly.</small>
               </div>
               <div className="form-actions">
                 <button type="button" onClick={() => setShowRegisterForm(false)} className="btn btn-secondary">
@@ -277,22 +313,25 @@ function Agents() {
                   </div>
                 </div>
                 <div className="card-body">
-                  {agent.config?.capabilities && agent.config.capabilities.length > 0 && (
+                  {agent.description && (
                     <div className="info-section">
-                      <span className="info-label">Capabilities:</span>
-                      <div className="tags">
-                        {agent.config.capabilities.map((cap, idx) => (
-                          <span key={idx} className="tag">{cap}</span>
-                        ))}
-                      </div>
+                      <p style={{ color: '#94a3b8', fontSize: '0.85em', margin: 0 }}>{agent.description}</p>
                     </div>
                   )}
-                  {agent.datasources && agent.datasources.length > 0 && (
-                    <div className="info-section">
-                      <span className="info-label">Connected Data:</span>
-                      <div className="tags">
-                        {agent.datasources.map((ds, idx) => (
-                          <span key={idx} className="tag datasource-tag">{ds}</span>
+                  {agent.datasource_id && (
+                    <div className="info-row" style={{ marginTop: 6 }}>
+                      <span className="info-label"><Tag size={12} style={{ marginRight: 3 }} />Datasource:</span>
+                      <span className="connection-string" title={agent.datasource_id}>
+                        {datasources.find((d) => d.id === agent.datasource_id)?.name || agent.datasource_id.substring(0, 8) + '…'}
+                      </span>
+                    </div>
+                  )}
+                  {agent.keywords && agent.keywords.length > 0 && (
+                    <div className="info-section" style={{ marginTop: 6 }}>
+                      <span className="info-label"><Key size={12} style={{ marginRight: 3 }} />Keywords:</span>
+                      <div className="tags" style={{ marginTop: 4 }}>
+                        {agent.keywords.map((kw, idx) => (
+                          <span key={idx} className="tag">{kw}</span>
                         ))}
                       </div>
                     </div>

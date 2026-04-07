@@ -24,14 +24,24 @@ function AgentPoolSelector({ value, onChange, disabled = false, id = 'agent-pool
   const [open, setOpen] = useState(false)
   const containerRef = useRef(null)
 
-  // Fetch agents on mount
-  useEffect(() => {
+  const loadAgents = () => {
+    setLoadingAgents(true)
     agentsAPI
       .list()
       .then((data) => setAgents(data.items || []))
       .catch(() => setAgents([]))
       .finally(() => setLoadingAgents(false))
+  }
+
+  // Fetch agents on mount
+  useEffect(() => {
+    loadAgents()
   }, [])
+
+  // Refresh agents list every time the dropdown opens
+  useEffect(() => {
+    if (open) loadAgents()
+  }, [open])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -48,16 +58,16 @@ function AgentPoolSelector({ value, onChange, disabled = false, id = 'agent-pool
 
   const toggleAuto = () => onChange(null)
 
-  const toggleAgent = (sourceType) => {
+  const toggleAgent = (agentId) => {
     if (isAuto) {
       // Switching away from Auto – select only this one
-      onChange([sourceType])
+      onChange([agentId])
       return
     }
     const current = value || []
-    const next = current.includes(sourceType)
-      ? current.filter((s) => s !== sourceType)
-      : [...current, sourceType]
+    const next = current.includes(agentId)
+      ? current.filter((s) => s !== agentId)
+      : [...current, agentId]
     // If nothing left, revert to Auto
     onChange(next.length === 0 ? null : next)
   }
@@ -68,7 +78,7 @@ function AgentPoolSelector({ value, onChange, disabled = false, id = 'agent-pool
     if (isAuto || agents.length === 0) return 'Auto (supervisor decides)'
     if (value.length === agents.length) return 'All agents selected'
     if (value.length === 1) {
-      const match = agents.find((a) => a.source_type === value[0])
+      const match = agents.find((a) => a.id === value[0])
       return match ? match.name : value[0]
     }
     return `${value.length} agents selected`
@@ -116,13 +126,13 @@ function AgentPoolSelector({ value, onChange, disabled = false, id = 'agent-pool
             <div className="aps-loading">Loading agents…</div>
           ) : (
             agents.map((agent) => {
-              const active = !isAuto && (value || []).includes(agent.source_type)
+              const active = !isAuto && (value || []).includes(agent.id)
               return (
                 <button
                   key={agent.id || agent.name}
                   type="button"
                   className={`aps-option${active ? ' aps-option--selected' : ''}`}
-                  onClick={() => toggleAgent(agent.source_type)}
+                  onClick={() => toggleAgent(agent.id)}
                   role="option"
                   aria-selected={active}
                 >

@@ -18,6 +18,8 @@ function StreamingChat() {
   const [selectedSources, setSelectedSources] = useState(null)   // null = Auto
   const [isLoading, setIsLoading] = useState(false)
   const [currentStatus, setCurrentStatus] = useState('')
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const elapsedRef = useRef(null)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -65,7 +67,9 @@ function StreamingChat() {
     setMessages((prev) => [...prev, userMessage, botPlaceholder])
     setInputValue('')
     setIsLoading(true)
+    setElapsedSeconds(0)
     setCurrentStatus('Starting stream...')
+    elapsedRef.current = setInterval(() => setElapsedSeconds((s) => s + 1), 1000)
 
     try {
       await chatAPI.streamMessage(userText, {
@@ -103,17 +107,20 @@ function StreamingChat() {
           setCurrentStatus('Completed')
         },
         onError: (event) => {
-          const errorText = event?.error || event?.message || 'Streaming failed'
+          const errorText = event?.error || event?.message || 'No agents returned a result for this query.'
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === botMessageId
-                ? { ...msg, content: `Error: ${errorText}`, isError: true, isMarkdown: false }
+                ? { ...msg, content: `⚠️ ${errorText}`, isError: true, isMarkdown: false }
                 : msg
             )
           )
           setCurrentStatus('Error')
+          clearInterval(elapsedRef.current)
+          setIsLoading(false)
         },
         onDone: () => {
+          clearInterval(elapsedRef.current)
           setIsLoading(false)
           setTimeout(() => setCurrentStatus(''), 1200)
         },
@@ -123,11 +130,12 @@ function StreamingChat() {
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === botMessageId
-            ? { ...msg, content: `Error: ${errorText}`, isError: true, isMarkdown: false }
+            ? { ...msg, content: `⚠️ ${errorText}`, isError: true, isMarkdown: false }
             : msg
         )
       )
       setCurrentStatus('Error')
+      clearInterval(elapsedRef.current)
       setIsLoading(false)
     }
   }
@@ -189,7 +197,14 @@ function StreamingChat() {
                 <Loader size={20} className="spinner" />
               </div>
               <div className="message-content">
-                <div className="message-text">{currentStatus || 'Streaming...'}</div>
+                <div className="message-text">
+                  {currentStatus || 'Streaming...'}
+                  {elapsedSeconds > 3 && (
+                    <span style={{ color: '#94a3b8', marginLeft: 8, fontSize: '0.85em' }}>
+                      ({elapsedSeconds}s)
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           )}

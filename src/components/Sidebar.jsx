@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { MessageSquare, Database, Users, Upload, LayoutDashboard, Menu, X } from 'lucide-react'
+import { MessageSquare, Database, Users, LayoutDashboard, Menu, X } from 'lucide-react'
 import './Sidebar.css'
 
 function Sidebar({ isOpen, onToggle }) {
@@ -10,7 +10,6 @@ function Sidebar({ isOpen, onToggle }) {
     { path: '/chat', icon: MessageSquare, label: 'Chat' },
     { path: '/datasources', icon: Database, label: 'Datasources' },
     { path: '/agents', icon: Users, label: 'Agents' },
-    { path: '/ingestion', icon: Upload, label: 'Ingestion' },
   ]
 
   return (

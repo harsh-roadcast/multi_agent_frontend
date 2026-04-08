@@ -5,7 +5,6 @@ import Dashboard from './pages/Dashboard'
 import StreamingChat from './pages/StreamingChat'
 import Datasources from './pages/Datasources'
 import Agents from './pages/Agents'
-import Ingestion from './pages/Ingestion'
 import './App.css'
 
 function App() {
@@ -21,7 +20,6 @@ function App() {
             <Route path="/chat" element={<StreamingChat />} />
             <Route path="/datasources" element={<Datasources />} />
             <Route path="/agents" element={<Agents />} />
-            <Route path="/ingestion" element={<Ingestion />} />
           </Routes>
         </main>
       </div>

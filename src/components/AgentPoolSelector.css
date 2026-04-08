@@ -1,5 +1,5 @@
 /* =========================================================
-   AgentPoolSelector – dropdown multi-select for agent pool
+   AgentPoolSelector – dark theme
    ========================================================= */
 
 .aps-container {
@@ -8,22 +8,22 @@
 }
 
 .aps-container.aps-disabled {
-  opacity: 0.55;
+  opacity: 0.45;
   pointer-events: none;
 }
 
-/* Trigger button */
+/* Trigger */
 .aps-trigger {
   display: flex;
   align-items: center;
   gap: 0.45rem;
   min-width: 240px;
-  background: white;
-  border: 1px solid var(--gray-300, #d1d5db);
+  background: rgba(10, 22, 40, 0.8);
+  border: 1px solid rgba(56, 189, 248, 0.2);
   border-radius: var(--border-radius, 8px);
   padding: 0.45rem 0.75rem;
   font-size: 0.875rem;
-  color: var(--gray-800, #1f2937);
+  color: var(--gray-800);
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
   white-space: nowrap;
@@ -31,15 +31,15 @@
 
 .aps-trigger:hover,
 .aps-trigger--open {
-  border-color: var(--primary-blue, #2563eb);
+  border-color: var(--primary-blue);
 }
 
 .aps-trigger--open {
-  box-shadow: 0 0 0 3px var(--blue-50, #eff6ff);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
 }
 
 .aps-icon {
-  color: var(--primary-blue, #2563eb);
+  color: var(--primary-blue);
   flex-shrink: 0;
 }
 
@@ -52,7 +52,7 @@
 
 .aps-chevron {
   flex-shrink: 0;
-  color: var(--gray-500, #6b7280);
+  color: var(--gray-500);
   transition: transform 0.2s;
 }
 
@@ -66,10 +66,10 @@
   top: calc(100% + 6px);
   left: 0;
   z-index: 200;
-  background: white;
-  border: 1px solid var(--gray-200, #e5e7eb);
+  background: #0a1628;
+  border: 1px solid rgba(56, 189, 248, 0.15);
   border-radius: var(--border-radius, 8px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 16px rgba(56, 189, 248, 0.06);
   min-width: 260px;
   padding: 0.375rem 0;
   max-height: 320px;
@@ -78,14 +78,14 @@
 
 .aps-divider {
   height: 1px;
-  background: var(--gray-100, #f3f4f6);
+  background: rgba(56, 189, 248, 0.08);
   margin: 0.25rem 0;
 }
 
 .aps-loading {
   padding: 0.75rem 1rem;
   font-size: 0.8125rem;
-  color: var(--gray-500, #6b7280);
+  color: var(--gray-500);
 }
 
 /* Row item */
@@ -100,21 +100,21 @@
   text-align: left;
   cursor: pointer;
   font-size: 0.875rem;
-  color: var(--gray-800, #1f2937);
+  color: var(--gray-800);
   transition: background 0.1s;
 }
 
 .aps-option:hover {
-  background: var(--gray-50, #f9fafb);
+  background: rgba(56, 189, 248, 0.06);
 }
 
 .aps-option--selected {
-  background: var(--blue-50, #eff6ff);
-  color: var(--primary-blue, #2563eb);
+  background: rgba(56, 189, 248, 0.08);
+  color: var(--primary-blue-light);
 }
 
 .aps-option--selected:hover {
-  background: #dbeafe;
+  background: rgba(56, 189, 248, 0.12);
 }
 
 .aps-check {
@@ -123,16 +123,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid var(--gray-300, #d1d5db);
+  border: 1.5px solid rgba(56, 189, 248, 0.25);
   border-radius: 4px;
   flex-shrink: 0;
   transition: background 0.1s, border-color 0.1s;
 }
 
 .aps-option--selected .aps-check {
-  background: var(--primary-blue, #2563eb);
-  border-color: var(--primary-blue, #2563eb);
-  color: white;
+  background: var(--primary-blue);
+  border-color: var(--primary-blue);
+  color: #0a1628;
 }
 
 .aps-option-label {
@@ -144,27 +144,16 @@
 
 .aps-option-label small {
   font-size: 0.75rem;
-  color: var(--gray-500, #6b7280);
+  color: var(--gray-500);
 }
 
 .aps-option--selected .aps-option-label small {
-  color: var(--primary-blue, #2563eb);
+  color: var(--primary-blue);
   opacity: 0.75;
 }
 
-/* Mobile: make it full-width */
 @media (max-width: 640px) {
-  .aps-trigger {
-    min-width: 0;
-    width: 100%;
-  }
-
-  .aps-container {
-    width: 100%;
-  }
-
-  .aps-dropdown {
-    min-width: 0;
-    width: 100%;
-  }
+  .aps-trigger    { min-width: 0; width: 100%; }
+  .aps-container  { width: 100%; }
+  .aps-dropdown   { min-width: 0; width: 100%; }
 }

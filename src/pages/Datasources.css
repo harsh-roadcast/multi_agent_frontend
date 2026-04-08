@@ -9,7 +9,7 @@
   position: fixed;
   top: 1rem;
   right: 1rem;
-  background: white;
+  background: var(--white);
   padding: 1rem 1.5rem;
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-lg);
@@ -48,7 +48,7 @@
 }
 
 .datasources-header {
-  background: white;
+  background: var(--white);
   padding: 1.5rem 2rem;
   border-bottom: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
@@ -108,7 +108,7 @@
 
 .btn-primary {
   background: var(--primary-blue);
-  color: white;
+  color: #071020;
   box-shadow: var(--shadow-sm);
 }
 
@@ -119,7 +119,7 @@
 }
 
 .btn-secondary {
-  background: white;
+  background: var(--white);
   color: var(--gray-700);
   border: 1px solid var(--gray-300);
 }
@@ -155,7 +155,7 @@
 }
 
 .modal {
-  background: white;
+  background: var(--white);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-xl);
   max-width: 500px;
@@ -225,6 +225,9 @@
   font-family: inherit;
   font-size: 0.9375rem;
   transition: all 0.2s;
+  background: var(--gray-100);
+  color: var(--gray-800);
+  color-scheme: dark;
 }
 
 .form-group input:focus,
@@ -294,7 +297,7 @@
 }
 
 .datasource-card {
-  background: white;
+  background: var(--white);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--gray-200);
@@ -441,7 +444,7 @@
 }
 
 .modal-content {
-  background: white;
+  background: var(--white);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-xl);
   max-width: 400px;

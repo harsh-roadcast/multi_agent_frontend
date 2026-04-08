@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Loader, Square } from 'lucide-react'
+import { Send, Bot, User, Square } from 'lucide-react'
 import { chatAPI } from '../services/api'
 import { formatResponseAsMarkdown, renderMarkdown } from '../utils/markdownFormatter.jsx'
 import AgentPoolSelector from '../components/AgentPoolSelector'
@@ -226,15 +226,16 @@ function StreamingChat() {
           {isLoading && (
             <div className="message bot loading">
               <div className="message-avatar">
-                <Loader size={20} className="spinner" />
+                <Bot size={20} />
               </div>
               <div className="message-content">
                 <div className="message-text">
-                  {currentStatus || 'Streaming...'}
+                  <div className="dot-loader">
+                    <span /><span /><span />
+                  </div>
+                  <span className="status-text">{currentStatus || 'Streaming…'}</span>
                   {elapsedSeconds > 3 && (
-                    <span style={{ color: '#94a3b8', marginLeft: 8, fontSize: '0.85em' }}>
-                      ({elapsedSeconds}s)
-                    </span>
+                    <span className="elapsed-badge">{elapsedSeconds}s</span>
                   )}
                 </div>
               </div>

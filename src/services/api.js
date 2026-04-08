@@ -120,6 +120,14 @@ export const chatAPI = {
       parseEventBlock(buffer)
     }
   },
+
+  cancelStream: async (requestId) => {
+    try {
+      await fetch(`${API_BASE_URL}/chat/cancel/${requestId}`, { method: 'POST' })
+    } catch {
+      // best-effort — backend may have already finished
+    }
+  },
 };
 
 // Datasources API

@@ -22,6 +22,7 @@ function StreamingChat() {
   const elapsedRef = useRef(null)
   const abortRef = useRef(null)
   const timeoutRef = useRef(null)
+  const requestIdRef = useRef(null)
   const messagesEndRef = useRef(null)
 
   const scrollToBottom = () => {
@@ -75,6 +76,7 @@ function StreamingChat() {
 
     const controller = new AbortController()
     abortRef.current = controller
+    requestIdRef.current = null
     timeoutRef.current = setTimeout(() => {
       controller.abort()
     }, 120_000)
@@ -83,7 +85,8 @@ function StreamingChat() {
       await chatAPI.streamMessage(userText, {
         selectedSources,
         signal: controller.signal,
-        onStarted: () => {
+        onStarted: (event) => {
+          if (event?.request_id) requestIdRef.current = event.request_id
           setCurrentStatus('Selecting agents...')
         },
         onDispatched: (event) => {
@@ -262,6 +265,7 @@ function StreamingChat() {
             <button
               onClick={() => {
                 abortRef.current?.abort()
+                if (requestIdRef.current) chatAPI.cancelStream(requestIdRef.current)
               }}
               className="send-button stop-button"
               title="Stop"

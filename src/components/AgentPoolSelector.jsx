@@ -12,11 +12,22 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
-import { ChevronDown, Check, Bot } from 'lucide-react'
+import { ChevronDown, Check, Bot, Database, FileText, Server, Search, BookOpen } from 'lucide-react'
 import { agentsAPI } from '../services/api'
 import './AgentPoolSelector.css'
 
 const AUTO_VALUE = '__auto__'
+
+const getSourceIcon = (type) => {
+  const icons = {
+    postgres: Database, mysql: Database, sql: Database,
+    redis: Server,
+    elasticsearch: Search,
+    document: FileText, documents: FileText,
+    gitbook: BookOpen,
+  }
+  return icons[type] || Bot
+}
 
 function AgentPoolSelector({ value, onChange, disabled = false, id = 'agent-pool' }) {
   const [agents, setAgents] = useState([])
@@ -127,6 +138,7 @@ function AgentPoolSelector({ value, onChange, disabled = false, id = 'agent-pool
           ) : (
             agents.map((agent) => {
               const active = !isAuto && (value || []).includes(agent.id)
+              const AgentIcon = getSourceIcon(agent.source_type)
               return (
                 <button
                   key={agent.id || agent.name}
@@ -138,6 +150,7 @@ function AgentPoolSelector({ value, onChange, disabled = false, id = 'agent-pool
                 >
                   <span className="aps-check">{active && <Check size={13} />}</span>
                   <span className="aps-option-label">
+                    <AgentIcon size={13} style={{ marginRight: 5, verticalAlign: 'middle', opacity: 0.75 }} />
                     {agent.name}
                     <small>{agent.source_type}</small>
                   </span>

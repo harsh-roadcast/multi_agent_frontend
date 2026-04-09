@@ -1,7 +1,23 @@
 import { useState, useEffect } from 'react'
-import { Database, Plus, RefreshCw, Upload, CheckCircle, AlertCircle, Trash2, X, Info, BookOpen } from 'lucide-react'
+import { Database, Plus, RefreshCw, Upload, CheckCircle, AlertCircle, Trash2, X, Info, BookOpen, FileText, Server, Search, Bot } from 'lucide-react'
 import { datasourcesAPI, ingestionAPI, gitbookConfigAPI } from '../services/api'
 import './Datasources.css'
+
+const getSourceIcon = (type) => {
+  const icons = {
+    postgres: Database, mysql: Database, sql: Database,
+    redis: Server,
+    elasticsearch: Search,
+    document: FileText, documents: FileText,
+    gitbook: BookOpen,
+  }
+  return icons[type] || Bot
+}
+
+const SourceTypeIcon = ({ type, ...props }) => {
+  const Icon = getSourceIcon(type)
+  return <Icon {...props} />
+}
 
 function Datasources() {
   const [datasources, setDatasources] = useState([])
@@ -191,7 +207,9 @@ function Datasources() {
       <header className="datasources-header">
         <div className="header-content">
           <div className="header-left">
-            <Database className="page-icon" size={28} />
+            <div className="pg-icon-wrap">
+              <Database size={32} />
+            </div>
             <div>
               <h1 className="page-title">Datasources</h1>
               <p className="page-subtitle">Manage and index your data sources</p>
@@ -369,7 +387,9 @@ function Datasources() {
             {datasources.map((ds) => (
               <div key={ds.id || ds.name} className="datasource-card">
                 <div className="card-header">
-                  <Database size={24} className="card-icon" />
+                  <div className="card-icon">
+                    <SourceTypeIcon type={ds.source_type} size={24} />
+                  </div>
                   <div className="card-title-section">
                     <h3 className="card-title">{ds.name}</h3>
                     <span className="datasource-type">{ds.source_type || 'unknown'}</span>

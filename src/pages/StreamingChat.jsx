@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
-import { Send, Bot, User, Square } from 'lucide-react'
+import { Send, User, Square } from 'lucide-react'
 import { chatAPI } from '../services/api'
 import { formatResponseAsMarkdown, renderMarkdown } from '../utils/markdownFormatter.jsx'
 import AgentPoolSelector from '../components/AgentPoolSelector'
+import logo from '../assets/Smart Sync Logo Head.png'
 import './Chat.css'
 
 function StreamingChat() {
@@ -183,7 +184,9 @@ function StreamingChat() {
     <div className="chat-page">
       <header className="chat-header">
         <div className="chat-header-content">
-          <Bot className="chat-icon" size={24} />
+          <div className="chat-logo-wrap">
+            <img src={logo} alt="SmartSync" className="chat-logo" />
+          </div>
           <div>
             <h1 className="chat-title">SmartSync</h1>
             <p className="chat-subtitle">Native token streaming · parallel agents</p>
@@ -208,7 +211,7 @@ function StreamingChat() {
               className={`message ${message.type} ${message.isError ? 'error' : ''} ${isLoading && message.type === 'bot' && !message.content ? 'loading' : ''}`}
             >
               <div className="message-avatar">
-                {message.type === 'user' ? <User size={20} /> : <Bot size={20} />}
+                {message.type === 'user' ? <User size={20} /> : <img src={logo} alt="SmartSync" className="avatar-logo" />}
               </div>
               <div className="message-content">
                 <div className="message-text">

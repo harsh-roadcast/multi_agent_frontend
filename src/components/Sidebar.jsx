@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
-import { MessageSquare, Database, Users, LayoutDashboard, Menu, X } from 'lucide-react'
+import { MessageSquare, Database, Users, LayoutDashboard } from 'lucide-react'
+import logo from '../assets/Smart Sync Logo Head.png'
 import './Sidebar.css'
 
-function Sidebar({ isOpen, onToggle }) {
+function Sidebar({ isOpen, onToggle, onNavClick }) {
   const location = useLocation()
 
   const navItems = [
@@ -15,9 +16,9 @@ function Sidebar({ isOpen, onToggle }) {
   return (
     <aside className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
       <div className="sidebar-header">
-        {isOpen && <h1 className="sidebar-title">SmartSync</h1>}
-        <button className="toggle-btn" onClick={onToggle}>
-          {isOpen ? <X size={20} /> : <Menu size={20} />}
+        <button className="sidebar-brand" onClick={onToggle} title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}>
+          <img src={logo} alt="SmartSync" className="sidebar-logo" />
+          {isOpen && <span className="sidebar-title">SmartSync</span>}
         </button>
       </div>
 
@@ -32,6 +33,7 @@ function Sidebar({ isOpen, onToggle }) {
               to={item.path}
               className={`nav-item ${isActive ? 'active' : ''}`}
               title={!isOpen ? item.label : ''}
+              onClick={onNavClick}
             >
               <Icon size={20} className="nav-icon" />
               {isOpen && <span className="nav-label">{item.label}</span>}

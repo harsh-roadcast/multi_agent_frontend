@@ -7,21 +7,26 @@
 .main-content {
   flex: 1;
   transition: margin-left 0.3s ease;
-  padding: 2rem;
-  margin-left: 260px;
+  padding: 0;
+  min-width: 0;
+  overflow-x: hidden;
 }
 
-.main-content.sidebar-closed {
-  margin-left: 80px;
-}
+.main-content.sidebar-open   { margin-left: 260px; }
+.main-content.sidebar-closed { margin-left: 80px; }
 
 @media (max-width: 768px) {
-  .main-content {
-    margin-left: 0;
-    padding: 1rem;
+  .main-content.sidebar-open,
+  .main-content.sidebar-closed {
+    margin-left: 0 !important;
   }
-  
-  .main-content.sidebar-open {
-    margin-left: 0;
+
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 999;
+    backdrop-filter: blur(2px);
   }
 }

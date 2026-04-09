@@ -1,7 +1,23 @@
 import { useState, useEffect } from 'react'
-import { Users, Plus, RefreshCw, MessageSquare, CheckCircle, AlertCircle, Trash2, Key, Tag } from 'lucide-react'
+import { Users, Plus, RefreshCw, MessageSquare, CheckCircle, AlertCircle, Trash2, Key, Tag, Database, FileText, Server, Search, Bot, BookOpen } from 'lucide-react'
 import { agentsAPI, datasourcesAPI } from '../services/api'
 import './Agents.css'
+
+const getSourceIcon = (type) => {
+  const icons = {
+    postgres: Database, mysql: Database, sql: Database,
+    redis: Server,
+    elasticsearch: Search,
+    document: FileText, documents: FileText,
+    gitbook: BookOpen,
+  }
+  return icons[type] || Bot
+}
+
+const SourceTypeIcon = ({ type, ...props }) => {
+  const Icon = getSourceIcon(type)
+  return <Icon {...props} />
+}
 
 function Agents() {
   const [agents, setAgents] = useState([])
@@ -134,7 +150,9 @@ function Agents() {
       <header className="agents-header">
         <div className="header-content">
           <div className="header-left">
-            <Users className="page-icon" size={28} />
+            <div className="pg-icon-wrap">
+              <Users size={32} />
+            </div>
             <div>
               <h1 className="page-title">AI Agents</h1>
               <p className="page-subtitle">Manage specialized AI agents for different tasks</p>
@@ -306,7 +324,9 @@ function Agents() {
             {agents.map((agent) => (
               <div key={agent.id || agent.name} className="agent-card">
                 <div className="card-header">
-                  <Users size={24} className="card-icon" />
+                  <div className="card-icon">
+                    <SourceTypeIcon type={agent.source_type} size={24} />
+                  </div>
                   <div className="card-title-section">
                     <h3 className="card-title">{agent.name}</h3>
                     <span className="agent-type">{agent.source_type || 'unknown'}</span>

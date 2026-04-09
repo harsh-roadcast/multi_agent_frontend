@@ -74,7 +74,9 @@ code {
 
 /* ── Disabled buttons vanish ───────────────────────────── */
 button:disabled {
-  display: none !important;
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Scrollbar Styling */

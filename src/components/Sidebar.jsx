@@ -15,7 +15,7 @@ function Sidebar({ isOpen, onToggle }) {
   return (
     <aside className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
       <div className="sidebar-header">
-        {isOpen && <h1 className="sidebar-title">LLM Chatbot</h1>}
+        {isOpen && <h1 className="sidebar-title">SmartSync</h1>}
         <button className="toggle-btn" onClick={onToggle}>
           {isOpen ? <X size={20} /> : <Menu size={20} />}
         </button>

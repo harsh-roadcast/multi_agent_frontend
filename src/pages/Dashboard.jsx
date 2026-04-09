@@ -52,7 +52,7 @@ function Dashboard() {
     <div className="dashboard">
       <header className="page-header">
         <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">Multi-Agent LLM Chatbot System Overview</p>
+        <p className="page-subtitle">SmartSync System Overview</p>
       </header>
 
       {loading ? (

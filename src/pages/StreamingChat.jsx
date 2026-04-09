@@ -10,7 +10,7 @@ function StreamingChat() {
     {
       id: 1,
       type: 'bot',
-      content: 'Hello! I\'m your multi-agent AI assistant. I\'ll show live agent progress and stream the response as it\'s generated.',
+      content: 'Hello! I\'m SmartSync, your multi-agent AI assistant. I\'ll show live agent progress and stream the response as it\'s generated.',
       timestamp: new Date(),
     },
   ])
@@ -41,10 +41,10 @@ function StreamingChat() {
   }
 
   const agentText = (event) => {
-    const id = event?.agent_id || event?.source_type || 'agent'
+    const name = event?.name || event?.source_type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || 'Agent'
     const status = event?.status || 'running'
     const icons = { success: '✓', failed: '✗', empty: '—' }
-    return `${id}: ${icons[status] || '●'} ${status}`
+    return `${name}: ${icons[status] || '●'} ${status}`
   }
 
   const handleSend = async () => {
@@ -185,7 +185,7 @@ function StreamingChat() {
         <div className="chat-header-content">
           <Bot className="chat-icon" size={24} />
           <div>
-            <h1 className="chat-title">AI Chat Assistant</h1>
+            <h1 className="chat-title">SmartSync</h1>
             <p className="chat-subtitle">Native token streaming · parallel agents</p>
           </div>
         </div>
@@ -205,14 +205,24 @@ function StreamingChat() {
           {messages.map((message) => (
             <div
               key={message.id}
-              className={`message ${message.type} ${message.isError ? 'error' : ''}`}
+              className={`message ${message.type} ${message.isError ? 'error' : ''} ${isLoading && message.type === 'bot' && !message.content ? 'loading' : ''}`}
             >
               <div className="message-avatar">
                 {message.type === 'user' ? <User size={20} /> : <Bot size={20} />}
               </div>
               <div className="message-content">
                 <div className="message-text">
-                  {message.isMarkdown ? (
+                  {isLoading && message.type === 'bot' && !message.content ? (
+                    <>
+                      <div className="dot-loader">
+                        <span /><span /><span />
+                      </div>
+                      <span className="status-text">{currentStatus || 'Streaming…'}</span>
+                      {elapsedSeconds > 3 && (
+                        <span className="elapsed-badge">{elapsedSeconds}s</span>
+                      )}
+                    </>
+                  ) : message.isMarkdown ? (
                     <div className="markdown-content">{renderMarkdown(message.content)}</div>
                   ) : (
                     message.content
@@ -222,25 +232,6 @@ function StreamingChat() {
               </div>
             </div>
           ))}
-
-          {isLoading && (
-            <div className="message bot loading">
-              <div className="message-avatar">
-                <Bot size={20} />
-              </div>
-              <div className="message-content">
-                <div className="message-text">
-                  <div className="dot-loader">
-                    <span /><span /><span />
-                  </div>
-                  <span className="status-text">{currentStatus || 'Streaming…'}</span>
-                  {elapsedSeconds > 3 && (
-                    <span className="elapsed-badge">{elapsedSeconds}s</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
 
           <div ref={messagesEndRef} />
         </div>

@@ -14,9 +14,16 @@ export const formatResponseAsMarkdown = (response) => {
   
   // Add sources/references if available
   if (sources && sources.length > 0) {
-    markdown += '\n\n---\n\n**📚 Referenced Datasources:**\n'
+    markdown += '\n\n---\n\n**📚 Referenced Sources:**\n'
     sources.forEach((source, index) => {
-      markdown += `\n${index + 1}. ${formatSourceName(source)}`
+      // If the backend sent a markdown link like [Title](url) or a file ref, use as-is
+      const isMarkdownLink = source.startsWith('[') && source.includes('](')
+      const isFileRef = source.startsWith('📄 ')
+      if (isMarkdownLink || isFileRef) {
+        markdown += `\n${index + 1}. ${source}`
+      } else {
+        markdown += `\n${index + 1}. ${formatSourceName(source)}`
+      }
     })
   }
   
@@ -49,6 +56,44 @@ const formatSourceName = (source) => {
  * @param {string} markdown - Markdown text
  * @returns {React.ReactNode} HTML elements
  */
+/**
+ * Parse inline markdown: converts [text](url) into <a> tags, **text** into <strong>
+ */
+const parseInlineMarkdown = (text) => {
+  // Split on markdown links [title](url) and bold **text**
+  const tokenRegex = /\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*/g
+  const parts = []
+  let lastIndex = 0
+  let match
+  while ((match = tokenRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index))
+    }
+    if (match[1] !== undefined) {
+      // Markdown link
+      parts.push(
+        <a
+          key={match.index}
+          href={match[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: '#60a5fa', textDecoration: 'underline', wordBreak: 'break-word' }}
+        >
+          {match[1]}
+        </a>
+      )
+    } else {
+      // Bold
+      parts.push(<strong key={match.index}>{match[3]}</strong>)
+    }
+    lastIndex = match.index + match[0].length
+  }
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex))
+  }
+  return parts.length > 0 ? parts : [text]
+}
+
 export const renderMarkdown = (markdown) => {
   if (!markdown) return null
 
@@ -263,7 +308,7 @@ export const renderMarkdown = (markdown) => {
       elements.push(
         <ol key={`list-${i}`} style={{ margin: '0.5em 0', paddingLeft: '1.5em' }}>
           {currentList.map((item, idx) => (
-            <li key={idx}>{item}</li>
+            <li key={idx}>{parseInlineMarkdown(item)}</li>
           ))}
         </ol>
       )
@@ -274,7 +319,7 @@ export const renderMarkdown = (markdown) => {
     if (line.trim()) {
       elements.push(
         <p key={`p-${i}`} style={{ margin: '0.5em 0', lineHeight: '1.6' }}>
-          {line}
+          {parseInlineMarkdown(line)}
         </p>
       )
     }
@@ -285,7 +330,7 @@ export const renderMarkdown = (markdown) => {
     elements.push(
       <ol key="final-list" style={{ margin: '0.5em 0', paddingLeft: '1.5em' }}>
         {currentList.map((item, idx) => (
-          <li key={idx}>{item}</li>
+          <li key={idx}>{parseInlineMarkdown(item)}</li>
         ))}
       </ol>
     )

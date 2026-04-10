@@ -173,9 +173,9 @@ function Dashboard() {
           <div className="db-logo-ring db-ring1" />
           <div className="db-logo-ring db-ring2" />
           <div className="db-logo-ring db-ring3" />
-          <img src={logo} alt="SmartSync" className="db-logo" />
+          <img src={logo} alt="Sarthi" className="db-logo" />
         </div>
-        <h1 className="db-hero-title">SmartSync</h1>
+        <h1 className="db-hero-title">S<span style={{WebkitTextFillColor:'#14b8a6',color:'#14b8a6'}}>a</span>rth<span style={{WebkitTextFillColor:'#14b8a6',color:'#14b8a6'}}>i</span></h1>
         <p className="db-hero-sub">Multi-Agent Intelligence Platform</p>
         <div className="db-status-pill">
           {isHealthy

@@ -17,8 +17,8 @@ function Sidebar({ isOpen, onToggle, onNavClick }) {
     <aside className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
       <div className="sidebar-header">
         <button className="sidebar-brand" onClick={onToggle} title={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}>
-          <img src={logo} alt="SmartSync" className="sidebar-logo" />
-          {isOpen && <span className="sidebar-title">SmartSync</span>}
+          <img src={logo} alt="Sarthi" className="sidebar-logo" />
+          {isOpen && <span className="sidebar-title">S<span style={{color:'#14b8a6'}}>a</span>rth<span style={{color:'#14b8a6'}}>i</span></span>}
         </button>
       </div>
 

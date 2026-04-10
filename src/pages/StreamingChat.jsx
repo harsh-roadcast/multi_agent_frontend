@@ -11,7 +11,7 @@ function StreamingChat() {
     {
       id: 1,
       type: 'bot',
-      content: 'Hello! I\'m SmartSync, your multi-agent AI assistant. I\'ll show live agent progress and stream the response as it\'s generated.',
+      content: 'Hello! I\'m Sarthi, your multi-agent AI assistant. I\'ll show live agent progress and stream the response as it\'s generated.',
       timestamp: new Date(),
     },
   ])
@@ -185,10 +185,10 @@ function StreamingChat() {
       <header className="chat-header">
         <div className="chat-header-content">
           <div className="chat-logo-wrap">
-            <img src={logo} alt="SmartSync" className="chat-logo" />
+            <img src={logo} alt="Sarthi" className="chat-logo" />
           </div>
           <div>
-            <h1 className="chat-title">SmartSync</h1>
+            <h1 className="chat-title">S<span style={{WebkitTextFillColor:'#14b8a6',color:'#14b8a6'}}>a</span>rth<span style={{WebkitTextFillColor:'#14b8a6',color:'#14b8a6'}}>i</span></h1>
             <p className="chat-subtitle">Native token streaming · parallel agents</p>
           </div>
         </div>
@@ -211,7 +211,7 @@ function StreamingChat() {
               className={`message ${message.type} ${message.isError ? 'error' : ''} ${isLoading && message.type === 'bot' && !message.content ? 'loading' : ''}`}
             >
               <div className="message-avatar">
-                {message.type === 'user' ? <User size={20} /> : <img src={logo} alt="SmartSync" className="avatar-logo" />}
+                {message.type === 'user' ? <User size={20} /> : <img src={logo} alt="Sarthi" className="avatar-logo" />}
               </div>
               <div className="message-content">
                 <div className="message-text">

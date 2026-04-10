@@ -135,12 +135,8 @@
 .chat-title {
   font-size: 1.375rem;
   font-weight: 700;
-  color: var(--gray-900);
   margin: 0;
-  background: linear-gradient(135deg, #e2e8f0 0%, #7dd3fc 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #38bdf8;
 }
 
 .chat-subtitle {

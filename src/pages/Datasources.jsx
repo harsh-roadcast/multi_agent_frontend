@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Database, Plus, RefreshCw, Upload, CheckCircle, AlertCircle, Trash2, X, Info, BookOpen, FileText, Server, Search, Bot } from 'lucide-react'
-import { datasourcesAPI, ingestionAPI, gitbookConfigAPI } from '../services/api'
+import { Database, Plus, RefreshCw, Upload, CheckCircle, AlertCircle, Trash2, X, Info, BookOpen, FileText, Server, Search, Bot, Sheet } from 'lucide-react'
+import { datasourcesAPI, ingestionAPI, gitbookConfigAPI, agentsAPI } from '../services/api'
 import './Datasources.css'
 
 const getSourceIcon = (type) => {
@@ -9,6 +9,7 @@ const getSourceIcon = (type) => {
     redis: Server,
     elasticsearch: Search,
     document: FileText, documents: FileText,
+    csv: FileText,
     gitbook: BookOpen,
   }
   return icons[type] || Bot
@@ -29,6 +30,7 @@ function Datasources() {
     connection: ''
   })
   const [documentFiles, setDocumentFiles] = useState([])
+  const [csvKeywords, setCsvKeywords] = useState('')
   const [gitbookEnvConfig, setGitbookEnvConfig] = useState(null) // { api_key_configured, uri }
   const [gitbookApiKey, setGitbookApiKey] = useState('')
   const [gitbookUri, setGitbookUri] = useState('')
@@ -84,6 +86,12 @@ function Datasources() {
             ...(gitbookApiKey.trim() ? { api_key: gitbookApiKey.trim() } : {}),
           },
         }
+      } else if (formData.source_type === 'csv') {
+        payload = {
+          name: formData.name,
+          source_type: 'csv',
+          metadata: { keywords: csvKeywords },
+        }
       } else {
         payload = {
           name: formData.name,
@@ -108,11 +116,34 @@ function Datasources() {
         // Mark as indexed after successful ingestion
         await datasourcesAPI.index(datasourceId, false, false)
       }
+
+      // CSV: upload files → index → auto-register agent with keywords
+      if (formData.source_type === 'csv' && datasourceId) {
+        if (documentFiles.length > 0) {
+          await ingestionAPI.ingest({
+            files: documentFiles,
+            metadata: { datasource_name: formData.name }
+          })
+          await datasourcesAPI.index(datasourceId, false, false)
+        }
+        // Auto-register a document agent scoped to this datasource
+        const keywordList = csvKeywords
+          .split(',')
+          .map((k) => k.trim())
+          .filter(Boolean)
+        await agentsAPI.register({
+          name: formData.name,
+          source_type: 'document',
+          datasource_id: datasourceId,
+          keywords: keywordList,
+        })
+      }
       
       // Show success after registration completes
       showNotification('Datasource registered successfully', 'success')
       setFormData({ name: '', source_type: 'postgres', connection: '' })
       setDocumentFiles([])
+      setCsvKeywords('')
       setGitbookApiKey('')
       setGitbookUri(gitbookEnvConfig?.uri || '')
       loadDatasources()
@@ -258,7 +289,8 @@ function Datasources() {
                   <option value="mysql">MySQL</option>
                   <option value="redis">Redis</option>
                   <option value="elasticsearch">Elasticsearch</option>
-                  <option value="documents">Documents</option>
+                  <option value="documents">Documents (PDF / DOCX)</option>
+                  <option value="csv">CSV / Spreadsheet</option>
                   <option value="gitbook">GitBook</option>
                 </select>
               </div>
@@ -318,6 +350,36 @@ function Datasources() {
                     </small>
                   </div>
                 </>
+              ) : formData.source_type === 'csv' ? (
+                <>
+                  <div className="form-group">
+                    <label htmlFor="csv-upload">Upload CSV / Excel files</label>
+                    <input
+                      id="csv-upload"
+                      type="file"
+                      multiple
+                      accept=".csv,.xlsx,.xls"
+                      onChange={(e) => setDocumentFiles(Array.from(e.target.files || []))}
+                    />
+                    <small style={{ color: '#94a3b8' }}>
+                      Accepted: .csv, .xlsx, .xls
+                    </small>
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="csv-keywords">Routing keywords <span style={{ color: '#94a3b8', fontWeight: 400 }}>(comma-separated)</span></label>
+                    <input
+                      id="csv-keywords"
+                      type="text"
+                      value={csvKeywords}
+                      onChange={(e) => setCsvKeywords(e.target.value)}
+                      placeholder="attendance, present, absent, employee, leave"
+                    />
+                    <small style={{ color: '#94a3b8' }}>
+                      Words that appear in user questions should be routed to this datasource.
+                      An agent will be auto-created with these keywords.
+                    </small>
+                  </div>
+                </>
               ) : (
                 <div className="form-group">
                   <label htmlFor="connection">Connection</label>
@@ -327,7 +389,7 @@ function Datasources() {
                         id="document-upload"
                         type="file"
                         multiple
-                        accept=".pdf,.docx,.pptx,.txt,.md"
+                        accept=".pdf,.docx,.pptx,.txt,.md,.csv,.xlsx,.xls"
                         onChange={(e) => {
                           const files = Array.from(e.target.files || [])
                           setDocumentFiles(files)

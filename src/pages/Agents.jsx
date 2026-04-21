@@ -9,6 +9,7 @@ const getSourceIcon = (type) => {
     redis: Server,
     elasticsearch: Search,
     document: FileText, documents: FileText,
+    csv: FileText,
     gitbook: BookOpen,
   }
   return icons[type] || Bot
@@ -201,7 +202,7 @@ function Agents() {
                   <option value="mysql">MySQL</option>
                   <option value="redis">Redis</option>
                   <option value="elasticsearch">Elasticsearch</option>
-                  <option value="document">Documents</option>
+                  <option value="document">Documents / CSV / Spreadsheet</option>
                   <option value="gitbook">GitBook</option>
                 </select>
               </div>
@@ -227,7 +228,8 @@ function Agents() {
                     const typeMatch = datasources.filter((ds) =>
                       ds.source_type === formData.source_type ||
                       (formData.source_type === 'gitbook' && ds.source_type === 'gitbook') ||
-                      (formData.source_type === 'document' && ds.source_type === 'documents')
+                      (formData.source_type === 'document' && ds.source_type === 'documents') ||
+                      (formData.source_type === 'document' && ds.source_type === 'csv')
                     )
                     const list = typeMatch.length > 0 ? typeMatch : datasources
                     return list.map((ds) => (

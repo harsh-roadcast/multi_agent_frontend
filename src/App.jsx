@@ -48,7 +48,7 @@ function App() {
   const closeSidebar = () => { if (isMobile()) setSidebarOpen(false) }
 
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="app">
         <Sidebar isOpen={sidebarOpen} onToggle={handleToggle} onNavClick={closeSidebar} />
 

@@ -301,7 +301,7 @@ function Datasources() {
                     <div className="form-group">
                       <label>
                         <BookOpen size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
-                        API Key
+                        Auth Key
                       </label>
                       <p className="form-hint" style={{ color: '#22c55e', margin: '4px 0' }}>
                         ✓ Using GITBOOK_API_KEY from server environment
@@ -310,14 +310,14 @@ function Datasources() {
                         type="password"
                         value={gitbookApiKey}
                         onChange={(e) => setGitbookApiKey(e.target.value)}
-                        placeholder="Override env API key (optional)"
+                        placeholder="Override env auth key (optional)"
                       />
                     </div>
                   ) : (
                     <div className="form-group">
                       <label>
                         <BookOpen size={14} style={{ marginRight: 4, verticalAlign: 'middle' }} />
-                        API Key <span style={{ color: '#ef4444' }}>*</span>
+                        Auth Key <span style={{ color: '#ef4444' }}>*</span>
                       </label>
                       <p className="form-hint" style={{ color: '#f97316', margin: '4px 0' }}>
                         ⚠ GITBOOK_API_KEY not set in server env
@@ -333,7 +333,7 @@ function Datasources() {
                   )}
                   <div className="form-group">
                     <label>
-                      Space URL
+                      Base URL
                       {gitbookEnvConfig?.uri && (
                         <span style={{ fontWeight: 400, color: '#94a3b8', marginLeft: 6 }}>(from env)</span>
                       )}
